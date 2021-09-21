@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:movie_buddy/LandingScreen/landingscreen.dart';
@@ -15,7 +17,12 @@ class _SplashScreenState extends State<SplashScreen> {
   final LocalStorage storage = new LocalStorage('moviebuddy');
 
   @override
-  void initState() {}
+  void initState() {
+    Timer(
+        Duration(seconds: 3),
+        () => Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => LandingScreen())));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +30,20 @@ class _SplashScreenState extends State<SplashScreen> {
         future: storage.ready,
         builder: (BuildContext context, snapshot) {
           if (snapshot.hasData) {
-            return AnimatedSplashScreen(
-              duration: 3000,
-              splash: Text(
-                "Movie Buddy",
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 50,
+            return SizedBox.expand(
+              child: Container(
+                margin: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
+                color: Colors.white,
+                //width: MediaQuery.of(context).size.width,
+                //height: MediaQuery.of(context).size.height,
+                child: Image(
+                  //width: MediaQuery.of(context).size.width,
+                  //height: MediaQuery.of(context).size.height,
+                  image: AssetImage("Assets/splash.jpeg"),
+                  fit: BoxFit.fitHeight,
                 ),
               ),
-              //nextScreen: flag ? HomePage() : SignIn(),
-              nextScreen: LandingScreen(),
-              splashTransition: SplashTransition.fadeTransition,
-              backgroundColor: Color(0xffF9EFE3),
             );
           }
           return SizedBox.expand(
