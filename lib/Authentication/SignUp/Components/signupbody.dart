@@ -21,6 +21,9 @@ class MySignUpScreenBody extends StatefulWidget {
 class _MySignUpScreenBodyState extends State<MySignUpScreenBody> {
   bool _passwordVisible = false;
   final TextEditingController _pass = TextEditingController();
+  late String name;
+  late String email;
+  late String password;
   @override
   void initState() {
     super.initState();
@@ -106,7 +109,9 @@ class _MySignUpScreenBodyState extends State<MySignUpScreenBody> {
                                 borderRadius: BorderRadius.circular(86.0),
                               ),
                             ),
-                            onSaved: (input) {},
+                            onSaved: (input) {
+                              name = input!;
+                            },
                           ),
                         ),
                         SizedBox(
@@ -141,7 +146,9 @@ class _MySignUpScreenBodyState extends State<MySignUpScreenBody> {
                                 borderRadius: BorderRadius.circular(86.0),
                               ),
                             ),
-                            onSaved: (input) {},
+                            onSaved: (input) {
+                              email = input!;
+                            },
                           ),
                         ),
                         SizedBox(
@@ -193,7 +200,9 @@ class _MySignUpScreenBodyState extends State<MySignUpScreenBody> {
                                       style: BorderStyle.solid, width: 10),
                                   borderRadius: BorderRadius.circular(10.0)),
                             ),
-                            onSaved: (input) {},
+                            onSaved: (input) {
+                              password = input!;
+                            },
                             obscureText: !_passwordVisible,
                           ),
                         ),
