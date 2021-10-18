@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:movie_buddy/HomeScreen/AddMoviesScreen/addmoviescreen.dart';
 import 'package:movie_buddy/HomeScreen/Components/homescreenbody.dart';
 import 'package:movie_buddy/LandingScreen/landingscreen.dart';
+
+import 'RemoveMoviesScreen/removemoviescreen.dart';
 
 class HomeScreen extends StatelessWidget {
   static String routeName = "/homescreen";
@@ -9,6 +12,18 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     void handleClick(String value) async {
       switch (value) {
+        case 'Add Movies':
+          {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AddMoviesScreen()));
+          }
+          break;
+        case 'Remove Movies':
+          {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => RemoveMoviesScreen()));
+          }
+          break;
         case 'Logout':
           bool result = await showDialog(
             context: context,
@@ -38,8 +53,6 @@ class HomeScreen extends StatelessWidget {
               );
             },
           );
-          break;
-        case 'Settings':
           break;
       }
     }
@@ -72,7 +85,8 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.black,
               ),
               itemBuilder: (BuildContext context) {
-                return {'Edit Watched List', 'Logout'}.map((String choice) {
+                return {'Add Movies', 'Remove Movies', 'Logout'}
+                    .map((String choice) {
                   return PopupMenuItem<String>(
                     value: choice,
                     child: Text(choice),
