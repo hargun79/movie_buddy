@@ -33,6 +33,7 @@ dependencies:
   modal_progress_hud_nsn: ^0.1.0-nullsafety-1
   http: ^0.13.4
   fluttertoast: ^8.0.8
+  cached_network_image: ^3.1.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:localstorage/localstorage.dart';
@@ -47,26 +48,45 @@ List<MovieDetails>? adventure = <MovieDetails>[];
 List<MovieDetails>? musical = <MovieDetails>[];
 List<MovieDetails>? animation = <MovieDetails>[];
 List<MovieDetails>? documentary = <MovieDetails>[];
+List<MovieDetails>? fantasy = <MovieDetails>[];
+List<MovieDetails>? mystery = <MovieDetails>[];
 
 class MovieDetails {
   dynamic movieId;
-  dynamic movieName;
-  dynamic date;
-  dynamic imdbUrl;
+  dynamic title;
+  dynamic imdbId;
+  dynamic youtubeId;
   List<String>? genres;
+  dynamic posterUrl;
+  dynamic youtubeUrl;
 
   MovieDetails(
-      {this.movieId, this.movieName, this.date, this.imdbUrl, this.genres});
+      {this.movieId,
+      this.title,
+      this.imdbId,
+      this.youtubeId,
+      this.genres,
+      this.posterUrl,
+      this.youtubeUrl});
 
   MovieDetails.fromJson(dynamic json) {
+    print(json);
     for (int i = 0; i < json.length; i++) {
       MovieDetails md = new MovieDetails();
       md.movieId = json[i]['movieId'];
-      md.movieName = json[i]['title'];
-      md.date = json[i]['date'];
-      md.imdbUrl = json[i]['imdb'];
+      md.title = json[i]['title'];
+      md.imdbId = json[i]['imdbId'];
+      md.youtubeId = json[i]['youtubeId'];
       List<dynamic> l = json[i]['Genre'];
       md.genres = l.cast<String>();
+      if (json[i]['posterUrl'] != null)
+        md.posterUrl = json[i]['posterUrl'];
+      else
+        md.posterUrl = "";
+      if (json[i]['youtubeUrl'] != null)
+        md.youtubeUrl = json[i]['youtubeUrl'];
+      else
+        md.youtubeUrl = "";
       for (int j = 0; j < json[i]['Genre'].length; j++) {
         if (json[i]['Genre'][j] == "Action") action!.add(md);
         if (json[i]['Genre'][j] == "Comedy") comedy!.add(md);
@@ -82,7 +102,10 @@ class MovieDetails {
         if (json[i]['Genre'][j] == "Adventure") adventure!.add(md);
         if (json[i]['Genre'][j] == "Horror") horror!.add(md);
         if (json[i]['Genre'][j] == "War") war!.add(md);
+        if (json[i]['Genre'][j] == "Mystery") war!.add(md);
+        if (json[i]['Genre'][j] == "Fantasy") war!.add(md);
       }
+      print(md);
     }
   }
 }
@@ -128,6 +151,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
     if (horror != null) horror!.clear();
     if (musical != null) musical!.clear();
     if (scifi != null) scifi!.clear();
+    if (mystery != null) mystery!.clear();
+    if (fantasy != null) fantasy!.clear();
     mp.clear();
     futureMovies = fetchMovies();
   }
@@ -180,8 +205,10 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                               'Crime',
                               'Documentary',
                               'Drama',
+                              'Fantasy',
                               'Horror',
                               'Musical',
+                              'Mystery',
                               'Romance',
                               'Sci-Fi',
                               'Thriller',
@@ -207,8 +234,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                       isSelected = true;
                                     movieTiles.add(MovieTile(
                                       movieId: action![i].movieId,
-                                      title: action![i].movieName,
-                                      releaseDate: action![i].date,
+                                      title: action![i].title,
+                                      posterUrl: action![i].posterUrl,
                                       genres: action![i].genres,
                                       isSelected: isSelected,
                                     ));
@@ -222,8 +249,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: adventure![i].movieId,
-                                        title: adventure![i].movieName,
-                                        releaseDate: adventure![i].date,
+                                        title: adventure![i].title,
+                                        posterUrl: adventure![i].posterUrl,
                                         genres: adventure![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -238,8 +265,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: animation![i].movieId,
-                                        title: animation![i].movieName,
-                                        releaseDate: animation![i].date,
+                                        title: animation![i].title,
+                                        posterUrl: animation![i].posterUrl,
                                         genres: animation![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -254,8 +281,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: children![i].movieId,
-                                        title: children![i].movieName,
-                                        releaseDate: children![i].date,
+                                        title: children![i].title,
+                                        posterUrl: children![i].posterUrl,
                                         genres: children![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -270,8 +297,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: comedy![i].movieId,
-                                        title: comedy![i].movieName,
-                                        releaseDate: comedy![i].date,
+                                        title: comedy![i].title,
+                                        posterUrl: comedy![i].posterUrl,
                                         genres: comedy![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -286,8 +313,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: crime![i].movieId,
-                                        title: crime![i].movieName,
-                                        releaseDate: crime![i].date,
+                                        title: crime![i].title,
+                                        posterUrl: crime![i].posterUrl,
                                         genres: crime![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -304,8 +331,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: documentary![i].movieId,
-                                        title: documentary![i].movieName,
-                                        releaseDate: documentary![i].date,
+                                        title: documentary![i].title,
+                                        posterUrl: documentary![i].posterUrl,
                                         genres: documentary![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -320,9 +347,25 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: drama![i].movieId,
-                                        title: drama![i].movieName,
-                                        releaseDate: drama![i].date,
+                                        title: drama![i].title,
+                                        posterUrl: drama![i].posterUrl,
                                         genres: drama![i].genres,
+                                        isSelected: isSelected,
+                                      ),
+                                    );
+                                  }
+                                }
+                                if (value == "Fantasy") {
+                                  for (int i = 0; i < fantasy!.length; i++) {
+                                    bool isSelected = false;
+                                    if (mp[fantasy![i].movieId] != null)
+                                      isSelected = true;
+                                    movieTiles.add(
+                                      MovieTile(
+                                        movieId: fantasy![i].movieId,
+                                        title: fantasy![i].title,
+                                        posterUrl: fantasy![i].posterUrl,
+                                        genres: fantasy![i].genres,
                                         isSelected: isSelected,
                                       ),
                                     );
@@ -336,8 +379,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: horror![i].movieId,
-                                        title: horror![i].movieName,
-                                        releaseDate: horror![i].date,
+                                        title: horror![i].title,
+                                        posterUrl: horror![i].posterUrl,
                                         genres: horror![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -352,9 +395,25 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: musical![i].movieId,
-                                        title: musical![i].movieName,
-                                        releaseDate: musical![i].date,
+                                        title: musical![i].title,
+                                        posterUrl: musical![i].posterUrl,
                                         genres: musical![i].genres,
+                                        isSelected: isSelected,
+                                      ),
+                                    );
+                                  }
+                                }
+                                if (value == "Mystery") {
+                                  for (int i = 0; i < mystery!.length; i++) {
+                                    bool isSelected = false;
+                                    if (mp[mystery![i].movieId] != null)
+                                      isSelected = true;
+                                    movieTiles.add(
+                                      MovieTile(
+                                        movieId: mystery![i].movieId,
+                                        title: mystery![i].title,
+                                        posterUrl: mystery![i].posterUrl,
+                                        genres: mystery![i].genres,
                                         isSelected: isSelected,
                                       ),
                                     );
@@ -368,8 +427,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: romance![i].movieId,
-                                        title: romance![i].movieName,
-                                        releaseDate: romance![i].date,
+                                        title: romance![i].title,
+                                        posterUrl: romance![i].posterUrl,
                                         genres: romance![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -384,8 +443,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: scifi![i].movieId,
-                                        title: scifi![i].movieName,
-                                        releaseDate: scifi![i].date,
+                                        title: scifi![i].title,
+                                        posterUrl: scifi![i].posterUrl,
                                         genres: scifi![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -400,8 +459,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: thriller![i].movieId,
-                                        title: thriller![i].movieName,
-                                        releaseDate: thriller![i].date,
+                                        title: thriller![i].title,
+                                        posterUrl: thriller![i].posterUrl,
                                         genres: thriller![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -416,8 +475,8 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     movieTiles.add(
                                       MovieTile(
                                         movieId: war![i].movieId,
-                                        title: war![i].movieName,
-                                        releaseDate: war![i].date,
+                                        title: war![i].title,
+                                        posterUrl: war![i].posterUrl,
                                         genres: war![i].genres,
                                         isSelected: isSelected,
                                       ),
@@ -593,14 +652,14 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
 class MovieTile extends StatefulWidget {
   late final int movieId;
   late final String title;
-  late final String releaseDate;
+  late final String posterUrl;
   List<String>? genres;
   bool isSelected = false;
 
   MovieTile(
       {required this.movieId,
       required this.title,
-      required this.releaseDate,
+      required this.posterUrl,
       this.genres,
       required this.isSelected});
 
@@ -612,76 +671,124 @@ class _MovieTileState extends State<MovieTile> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Container(
+        height: 213,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: Color(0xFFFCE3C5),
         ),
-        child: Padding(
-          padding: EdgeInsets.only(top: 20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                      child: Padding(
-                    padding: EdgeInsets.only(left: 20),
-                    child: Text(
-                      "${widget.title}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image(
+                        image: CachedNetworkImageProvider(widget.posterUrl),
+                        width: 110,
+                        height: 165,
                       ),
                     ),
-                  )),
-                ],
-              ),
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 20),
-                    child: Text(
-                      "${widget.releaseDate}",
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 20),
-                child: Row(
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    for (int i = 0; i < widget.genres!.length; i++)
-                      if (i <= 2)
-                        Row(
-                          children: [
-                            Padding(
-                              padding:
-                                  EdgeInsets.only(right: 5, top: 5, bottom: 10),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(50),
-                                  color: Color(0xFFFFFFF5),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Text("${widget.genres![i]} "),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: 15, right: 15, top: 15, bottom: 5),
+                          child: Container(
+                            width: 160,
+                            child: Center(
+                              child: Text(
+                                "${widget.title}",
+                                maxLines: 2,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  for (int i = 0;
+                                      i < widget.genres!.length && i < 2;
+                                      i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 7, top: 5),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: Color(0xFFFFFFF5),
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("${widget.genres![i]} "),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  for (int i = 2;
+                                      i < widget.genres!.length && i < 4;
+                                      i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 7, top: 5),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: Color(0xFFFFFFF5),
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("${widget.genres![i]} "),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ),
-              Divider(
-                height: 1,
-              ),
-              Center(
-                child: SizedBox(
-                  width: double.infinity,
+              ],
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 303.8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(20)),
+                    color: Color(0xFFF9EFE3),
+                  ),
                   child: TextButton(
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.all(0),
@@ -703,9 +810,9 @@ class _MovieTileState extends State<MovieTile> {
                       },
                       child: widget.isSelected ? Text("Remove") : Text("Add")),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -13,6 +13,7 @@ Future<dynamic> fetchMovies() async {
   Map<String, String> headers = {
     "Content-type": "application/json",
     "Accept": "application/json",
+    'Charset': 'utf-8',
     "Authorization": "Bearer $token",
   };
 
@@ -33,21 +34,31 @@ List<MovieDetails>? movies = <MovieDetails>[];
 
 class MovieDetails {
   dynamic movieId;
-  dynamic movieName;
-  dynamic date;
-  dynamic imdbUrl;
+  dynamic title;
   List<String>? genres;
+  dynamic posterUrl;
+  dynamic youtubeUrl;
 
   MovieDetails(
-      {this.movieId, this.movieName, this.date, this.imdbUrl, this.genres});
+      {this.movieId, this.title, this.genres, this.posterUrl, this.youtubeUrl});
 
   MovieDetails.fromJson(dynamic json) {
+    print("Here");
+    print(jsonDecode(json));
+    print("Here");
     for (int i = 0; i < json.length; i++) {
       MovieDetails md = new MovieDetails();
       md.movieId = json[i][0];
-      md.movieName = json[i][1];
-      md.date = json[i][2];
-      md.imdbUrl = json[i][3];
+      print(json[4][0]);
+      md.title = json[i][1];
+      if (json[i][2].toString() != "NaN")
+        md.posterUrl = json[i][2];
+      else
+        md.posterUrl = "";
+      if (json[i][3].toString() != "NaN")
+        md.youtubeUrl = json[i][3];
+      else
+        md.youtubeUrl = "";
       String s = json[i][4];
       List<String> g = s.split(', ');
       for (int i = 0; i < g.length; i++) {
@@ -147,8 +158,8 @@ Widget myhomebody(dynamic snapshot) {
             ),
             for (int i = 0; i < movies!.length; i++)
               MovieTile(
-                title: movies![i].movieName,
-                releaseDate: movies![i].date,
+                title: movies![i].title,
+                posterUrl: movies![i].posterUrl,
                 genres: movies![i].genres,
               ),
             SizedBox(
@@ -163,10 +174,10 @@ Widget myhomebody(dynamic snapshot) {
 
 class MovieTile extends StatelessWidget {
   late final String title;
-  late final String releaseDate;
+  late final String posterUrl;
   List<String>? genres;
 
-  MovieTile({required this.title, required this.releaseDate, this.genres});
+  MovieTile({required this.title, required this.posterUrl, this.genres});
 
   @override
   Widget build(BuildContext context) {
@@ -191,14 +202,6 @@ class MovieTile extends StatelessWidget {
                       fontSize: 20,
                     ),
                   )),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    "$releaseDate",
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
                 ],
               ),
               Row(
