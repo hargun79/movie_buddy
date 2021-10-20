@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
@@ -43,19 +44,15 @@ class MovieDetails {
       {this.movieId, this.title, this.genres, this.posterUrl, this.youtubeUrl});
 
   MovieDetails.fromJson(dynamic json) {
-    print("Here");
-    print(jsonDecode(json));
-    print("Here");
     for (int i = 0; i < json.length; i++) {
       MovieDetails md = new MovieDetails();
       md.movieId = json[i][0];
-      print(json[4][0]);
       md.title = json[i][1];
-      if (json[i][2].toString() != "NaN")
+      if (json[i][2] != "None")
         md.posterUrl = json[i][2];
       else
         md.posterUrl = "";
-      if (json[i][3].toString() != "NaN")
+      if (json[i][3] != "None")
         md.youtubeUrl = json[i][3];
       else
         md.youtubeUrl = "";
@@ -172,61 +169,141 @@ Widget myhomebody(dynamic snapshot) {
   );
 }
 
-class MovieTile extends StatelessWidget {
+class MovieTile extends StatefulWidget {
   late final String title;
   late final String posterUrl;
-  List<String>? genres;
+  List<dynamic>? genres;
 
   MovieTile({required this.title, required this.posterUrl, this.genres});
 
   @override
+  State<MovieTile> createState() => _MovieTileState();
+}
+
+class _MovieTileState extends State<MovieTile> {
+  @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 10, right: 10),
+      padding: EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Container(
+        height: 165,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: Color(0xFFFCE3C5),
         ),
-        child: Padding(
-          padding: EdgeInsets.only(left: 20, top: 20, bottom: 20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                      child: Text(
-                    "$title",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  )),
-                ],
-              ),
-              Row(
-                children: [
-                  for (int i = 0; i < genres!.length; i++)
-                    if (i <= 2)
-                      Flexible(
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 5, top: 5),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    if (widget.posterUrl != "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(widget.posterUrl),
+                          width: 110,
+                          height: 165,
+                        ),
+                      ),
+                    if (widget.posterUrl == "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(
+                              "https://res.cloudinary.com/hargun79/image/upload/v1634756580/41bLP6NzvKL.jpg"),
+                          width: 110,
+                          height: 165,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: 15, right: 15, top: 15, bottom: 5),
                           child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Color(0xFFFFFFF5),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Text("${genres![i]} "),
+                            width: 160,
+                            child: Center(
+                              child: Text(
+                                "${widget.title}",
+                                maxLines: 2,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                ],
-              ),
-            ],
-          ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  for (int i = 0;
+                                      i < widget.genres!.length && i < 2;
+                                      i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 7, top: 5),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: Color(0xFFFFFFF5),
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("${widget.genres![i]} "),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  for (int i = 2;
+                                      i < widget.genres!.length && i < 4;
+                                      i++)
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 7, top: 5),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                          color: Color(0xFFFFFFF5),
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("${widget.genres![i]} "),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

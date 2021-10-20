@@ -243,14 +243,25 @@ class _MovieTileState extends State<MovieTile> {
               children: [
                 Column(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image(
-                        image: CachedNetworkImageProvider(widget.posterUrl),
-                        width: 110,
-                        height: 165,
+                    if (widget.posterUrl != "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(widget.posterUrl),
+                          width: 110,
+                          height: 165,
+                        ),
                       ),
-                    ),
+                    if (widget.posterUrl == "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(
+                              "https://res.cloudinary.com/hargun79/image/upload/v1634756580/41bLP6NzvKL.jpg"),
+                          width: 110,
+                          height: 165,
+                        ),
+                      ),
                   ],
                 ),
                 Column(
