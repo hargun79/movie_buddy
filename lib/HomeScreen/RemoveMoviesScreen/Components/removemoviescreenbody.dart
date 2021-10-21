@@ -257,7 +257,7 @@ class _MovieTileState extends State<MovieTile> {
                         borderRadius: BorderRadius.circular(8.0),
                         child: Image(
                           image: CachedNetworkImageProvider(
-                              "https://res.cloudinary.com/hargun79/image/upload/v1634756580/41bLP6NzvKL.jpg"),
+                              "https://res.cloudinary.com/hargun79/image/upload/v1634793149/404_Poster_Not_Found.png"),
                           width: 110,
                           height: 165,
                         ),

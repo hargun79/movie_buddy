@@ -102,8 +102,8 @@ class MovieDetails {
         if (json[i]['Genre'][j] == "Adventure") adventure!.add(md);
         if (json[i]['Genre'][j] == "Horror") horror!.add(md);
         if (json[i]['Genre'][j] == "War") war!.add(md);
-        if (json[i]['Genre'][j] == "Mystery") war!.add(md);
-        if (json[i]['Genre'][j] == "Fantasy") war!.add(md);
+        if (json[i]['Genre'][j] == "Mystery") mystery!.add(md);
+        if (json[i]['Genre'][j] == "Fantasy") fantasy!.add(md);
       }
       print(md);
     }
@@ -686,14 +686,25 @@ class _MovieTileState extends State<MovieTile> {
               children: [
                 Column(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image(
-                        image: CachedNetworkImageProvider(widget.posterUrl),
-                        width: 110,
-                        height: 165,
+                    if (widget.posterUrl != "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(widget.posterUrl),
+                          width: 110,
+                          height: 165,
+                        ),
                       ),
-                    ),
+                    if (widget.posterUrl == "")
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image(
+                          image: CachedNetworkImageProvider(
+                              "https://res.cloudinary.com/hargun79/image/upload/v1634793149/404_Poster_Not_Found.png"),
+                          width: 110,
+                          height: 165,
+                        ),
+                      ),
                   ],
                 ),
                 Column(
