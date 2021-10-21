@@ -499,6 +499,7 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
                                     MediaQuery.of(context).size.height * 0.7,
                                 child: ListView.builder(
                                     itemCount: movieTiles.length,
+                                    key: ObjectKey(movieTiles[0]),
                                     itemBuilder:
                                         (BuildContext context, int index) {
                                       return movieTiles[index];
