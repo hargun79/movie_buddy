@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
+import 'package:movie_buddy/YoutubePlayer/youtubeplayer.dart';
 
 final LocalStorage storage = new LocalStorage('movie-buddy');
 bool flag = true;
@@ -101,7 +102,47 @@ class _MyHomeScreenBodyState extends State<MyHomeScreenBody> {
         future: futureMovies,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return myhomebody(snapshot);
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(top: 20, left: 10, right: 10),
+                child: Container(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Recommended For You",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 25),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      for (int i = 0; i < movies!.length; i++)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => YoutubeAppDemo(
+                                      title: movies![i].title,
+                                      genres: movies![i].genres,
+                                      url: movies![i].youtubeUrl,
+                                    )));
+                          },
+                          child: MovieTile(
+                            title: movies![i].title,
+                            posterUrl: movies![i].posterUrl,
+                            genres: movies![i].genres,
+                          ),
+                        ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
           } else if (snapshot.hasError) {
             print(snapshot.error);
             return Padding(
@@ -134,39 +175,6 @@ class _MyHomeScreenBodyState extends State<MyHomeScreenBody> {
           ));
         });
   }
-}
-
-Widget myhomebody(dynamic snapshot) {
-  return SingleChildScrollView(
-    child: Padding(
-      padding: EdgeInsets.only(top: 20, left: 10, right: 10),
-      child: Container(
-        padding: EdgeInsets.only(left: 15),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Recommended For You",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            for (int i = 0; i < movies!.length; i++)
-              MovieTile(
-                title: movies![i].title,
-                posterUrl: movies![i].posterUrl,
-                genres: movies![i].genres,
-              ),
-            SizedBox(
-              height: 20,
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 class MovieTile extends StatefulWidget {
