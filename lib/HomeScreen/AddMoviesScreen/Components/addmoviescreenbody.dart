@@ -171,8 +171,6 @@ class _MyAddMoviesScreenBodyState extends State<MyAddMoviesScreenBody> {
             else
               flag2 = false;
             previous = _searchText;
-          } else {
-            FocusScope.of(context).unfocus();
           }
         });
       }

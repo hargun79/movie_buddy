@@ -10,7 +10,7 @@ import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:movie_buddy/HomeScreen/homescreen.dart';
 
 int rtng = 0;
-
+String previous = "";
 final LocalStorage storage = new LocalStorage('movie-buddy');
 bool flag = true, flag2 = false, isButtonDisabled = true;
 HashMap mp = new HashMap<int, int>();
@@ -147,29 +147,32 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
         });
       } else {
         setState(() {
-          movieTiles.clear();
-          _searchText = _searchQuery.text;
-          print(_searchText);
-          for (int i = 0; i < all!.length; i++) {
-            String name = all![i].title;
-            if (name.toLowerCase().contains(_searchText.toLowerCase())) {
-              bool isSelected = false;
-              if (mp[all![i].movieId] != null) isSelected = true;
-              movieTiles.add(
-                MovieTile(
-                  movieId: all![i].movieId,
-                  title: all![i].title,
-                  posterUrl: all![i].posterUrl,
-                  genres: all![i].genres,
-                  isSelected: isSelected,
-                ),
-              );
+          if (_searchQuery.text != previous) {
+            movieTiles.clear();
+            _searchText = _searchQuery.text;
+            print(_searchText);
+            for (int i = 0; i < all!.length; i++) {
+              String name = all![i].title;
+              if (name.toLowerCase().contains(_searchText.toLowerCase())) {
+                bool isSelected = false;
+                if (mp[all![i].movieId] != null) isSelected = true;
+                movieTiles.add(
+                  MovieTile(
+                    movieId: all![i].movieId,
+                    title: all![i].title,
+                    posterUrl: all![i].posterUrl,
+                    genres: all![i].genres,
+                    isSelected: isSelected,
+                  ),
+                );
+              }
             }
+            if (movieTiles.length > 0)
+              flag2 = true;
+            else
+              flag2 = false;
+            previous = _searchText;
           }
-          if (movieTiles.length > 0)
-            flag2 = true;
-          else
-            flag2 = false;
         });
       }
     });
