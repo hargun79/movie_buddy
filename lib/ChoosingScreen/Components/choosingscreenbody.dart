@@ -2,11 +2,14 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:movie_buddy/HomeScreen/homescreen.dart';
+
+int rtng = 0;
 
 final LocalStorage storage = new LocalStorage('movie-buddy');
 bool flag = true, flag2 = false, isButtonDisabled = true;
@@ -50,6 +53,7 @@ List<MovieDetails>? animation = <MovieDetails>[];
 List<MovieDetails>? documentary = <MovieDetails>[];
 List<MovieDetails>? fantasy = <MovieDetails>[];
 List<MovieDetails>? mystery = <MovieDetails>[];
+List<MovieDetails>? all = <MovieDetails>[];
 
 class MovieDetails {
   dynamic movieId;
@@ -87,6 +91,7 @@ class MovieDetails {
         md.youtubeUrl = json[i]['youtubeUrl'];
       else
         md.youtubeUrl = "";
+      all!.add(md);
       for (int j = 0; j < json[i]['Genre'].length; j++) {
         if (json[i]['Genre'][j] == "Action") action!.add(md);
         if (json[i]['Genre'][j] == "Comedy") comedy!.add(md);
@@ -131,12 +136,51 @@ List<MovieTile> movieTiles = <MovieTile>[];
 String? _dropDownValue = "Choose Genre";
 
 class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
+  String _searchText = "";
+  _MyChoosingScreenBodyState() {
+    _searchQuery.addListener(() {
+      if (_searchQuery.text.isEmpty) {
+        setState(() {
+          flag2 = false;
+          movieTiles.clear();
+          _searchText = "";
+        });
+      } else {
+        setState(() {
+          movieTiles.clear();
+          _searchText = _searchQuery.text;
+          print(_searchText);
+          for (int i = 0; i < all!.length; i++) {
+            String name = all![i].title;
+            if (name.toLowerCase().contains(_searchText.toLowerCase())) {
+              bool isSelected = false;
+              if (mp[all![i].movieId] != null) isSelected = true;
+              movieTiles.add(
+                MovieTile(
+                  movieId: all![i].movieId,
+                  title: all![i].title,
+                  posterUrl: all![i].posterUrl,
+                  genres: all![i].genres,
+                  isSelected: isSelected,
+                ),
+              );
+            }
+          }
+          if (movieTiles.length > 0)
+            flag2 = true;
+          else
+            flag2 = false;
+        });
+      }
+    });
+  }
   late Future<dynamic> futureMovies;
   bool showSpinner = false;
   @override
   void initState() {
     super.initState();
     isButtonDisabled = true;
+    if (all != null) all!.clear();
     if (action != null) action!.clear();
     if (crime != null) crime!.clear();
     if (thriller != null) thriller!.clear();
@@ -157,495 +201,578 @@ class _MyChoosingScreenBodyState extends State<MyChoosingScreenBody> {
     futureMovies = fetchMovies();
   }
 
+  final _scaffoldkey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchQuery = new TextEditingController();
+  Widget appBarTitle = new Text(
+    "Movie Buddy",
+    style: new TextStyle(color: Colors.black),
+  );
+  Icon actionIcon = new Icon(
+    Icons.search,
+    color: Colors.white,
+  );
+  bool _IsSearching = false;
+  void _handleSearchStart() {
+    setState(() {
+      //flag2 = true;
+    });
+  }
+
+  void _handleSearchEnd() {
+    setState(() {
+      this.actionIcon = new Icon(
+        Icons.search,
+        color: Colors.white,
+      );
+      this.appBarTitle = new Text(
+        "Movie Buddy",
+        style: new TextStyle(color: Colors.black),
+      );
+      flag2 = false;
+      _searchQuery.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     BuildContext context2 = context;
-    return ModalProgressHUD(
-      inAsyncCall: showSpinner,
-      child: FutureBuilder<dynamic>(
-          future: futureMovies,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 20, left: 10, right: 10),
-                  child: Container(
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Choose Movies You Like",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 25),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.85,
-                          child: DropdownButton<String>(
-                            hint: _dropDownValue == null
-                                ? Text('Choose Genre')
-                                : Text(
-                                    _dropDownValue.toString(),
-                                  ),
-                            isExpanded: true,
-                            icon: Icon(
-                              Icons.arrow_drop_down_circle_outlined,
-                            ),
-                            focusColor: Colors.black,
-                            items: <String>[
-                              'Action',
-                              'Adventure',
-                              'Animation',
-                              'Children',
-                              'Comedy',
-                              'Crime',
-                              'Documentary',
-                              'Drama',
-                              'Fantasy',
-                              'Horror',
-                              'Musical',
-                              'Mystery',
-                              'Romance',
-                              'Sci-Fi',
-                              'Thriller',
-                              'War'
-                            ].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              print(value);
-                              setState(() {
-                                _dropDownValue = value;
-                                movieTiles.clear();
-                                if (value == "Action") {
-                                  for (int i = 0; i < action!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[action![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(MovieTile(
-                                      movieId: action![i].movieId,
-                                      title: action![i].title,
-                                      posterUrl: action![i].posterUrl,
-                                      genres: action![i].genres,
-                                      isSelected: isSelected,
-                                    ));
-                                  }
-                                }
-                                if (value == "Adventure") {
-                                  for (int i = 0; i < adventure!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[adventure![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: adventure![i].movieId,
-                                        title: adventure![i].title,
-                                        posterUrl: adventure![i].posterUrl,
-                                        genres: adventure![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Animation") {
-                                  for (int i = 0; i < animation!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[animation![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: animation![i].movieId,
-                                        title: animation![i].title,
-                                        posterUrl: animation![i].posterUrl,
-                                        genres: animation![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Children") {
-                                  for (int i = 0; i < children!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[children![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: children![i].movieId,
-                                        title: children![i].title,
-                                        posterUrl: children![i].posterUrl,
-                                        genres: children![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Comedy") {
-                                  for (int i = 0; i < comedy!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[comedy![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: comedy![i].movieId,
-                                        title: comedy![i].title,
-                                        posterUrl: comedy![i].posterUrl,
-                                        genres: comedy![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Crime") {
-                                  for (int i = 0; i < crime!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[crime![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: crime![i].movieId,
-                                        title: crime![i].title,
-                                        posterUrl: crime![i].posterUrl,
-                                        genres: crime![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Documentary") {
-                                  for (int i = 0;
-                                      i < documentary!.length;
-                                      i++) {
-                                    bool isSelected = false;
-                                    if (mp[documentary![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: documentary![i].movieId,
-                                        title: documentary![i].title,
-                                        posterUrl: documentary![i].posterUrl,
-                                        genres: documentary![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Drama") {
-                                  for (int i = 0; i < drama!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[drama![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: drama![i].movieId,
-                                        title: drama![i].title,
-                                        posterUrl: drama![i].posterUrl,
-                                        genres: drama![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Fantasy") {
-                                  for (int i = 0; i < fantasy!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[fantasy![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: fantasy![i].movieId,
-                                        title: fantasy![i].title,
-                                        posterUrl: fantasy![i].posterUrl,
-                                        genres: fantasy![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Horror") {
-                                  for (int i = 0; i < horror!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[horror![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: horror![i].movieId,
-                                        title: horror![i].title,
-                                        posterUrl: horror![i].posterUrl,
-                                        genres: horror![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Musical") {
-                                  for (int i = 0; i < musical!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[musical![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: musical![i].movieId,
-                                        title: musical![i].title,
-                                        posterUrl: musical![i].posterUrl,
-                                        genres: musical![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Mystery") {
-                                  for (int i = 0; i < mystery!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[mystery![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: mystery![i].movieId,
-                                        title: mystery![i].title,
-                                        posterUrl: mystery![i].posterUrl,
-                                        genres: mystery![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Romance") {
-                                  for (int i = 0; i < romance!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[romance![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: romance![i].movieId,
-                                        title: romance![i].title,
-                                        posterUrl: romance![i].posterUrl,
-                                        genres: romance![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Sci-Fi") {
-                                  for (int i = 0; i < scifi!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[scifi![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: scifi![i].movieId,
-                                        title: scifi![i].title,
-                                        posterUrl: scifi![i].posterUrl,
-                                        genres: scifi![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "Thriller") {
-                                  for (int i = 0; i < thriller!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[thriller![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: thriller![i].movieId,
-                                        title: thriller![i].title,
-                                        posterUrl: thriller![i].posterUrl,
-                                        genres: thriller![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                if (value == "War") {
-                                  for (int i = 0; i < war!.length; i++) {
-                                    bool isSelected = false;
-                                    if (mp[war![i].movieId] != null)
-                                      isSelected = true;
-                                    movieTiles.add(
-                                      MovieTile(
-                                        movieId: war![i].movieId,
-                                        title: war![i].title,
-                                        posterUrl: war![i].posterUrl,
-                                        genres: war![i].genres,
-                                        isSelected: isSelected,
-                                      ),
-                                    );
-                                  }
-                                }
-                                print(movieTiles.length);
-                                print(movieTiles[0]);
-                                flag2 = true;
-                              });
-                            },
+    return Scaffold(
+      key: _scaffoldkey,
+      backgroundColor: Colors.white,
+      body: ModalProgressHUD(
+        inAsyncCall: showSpinner,
+        child: FutureBuilder<dynamic>(
+            future: futureMovies,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20, left: 10, right: 10),
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10, right: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Rate Movies You Like",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 25),
                           ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        flag2
-                            ? SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.7,
-                                child: ListView.builder(
-                                    itemCount: movieTiles.length,
-                                    key: ObjectKey(movieTiles[0]),
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return movieTiles[index];
-                                    }),
-                              )
-                            : SizedBox(),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Center(
-                            child: Container(
-                              //color: Colors.blueAccent,
-                              width: double.infinity,
-                              child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding:
-                                        EdgeInsets.only(bottom: 20, top: 5),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width * 0.85,
+                            child: DropdownButton<String>(
+                              hint: _dropDownValue == null
+                                  ? Text('Choose Genre')
+                                  : Text(
+                                      _dropDownValue.toString(),
+                                    ),
+                              isExpanded: true,
+                              icon: Icon(
+                                Icons.arrow_drop_down_circle_outlined,
+                              ),
+                              focusColor: Colors.black,
+                              items: <String>[
+                                'Action',
+                                'Adventure',
+                                'Animation',
+                                'Children',
+                                'Comedy',
+                                'Crime',
+                                'Documentary',
+                                'Drama',
+                                'Fantasy',
+                                'Horror',
+                                'Musical',
+                                'Mystery',
+                                'Romance',
+                                'Sci-Fi',
+                                'Thriller',
+                                'War'
+                              ].map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(color: Colors.black),
                                   ),
-                                  onPressed: () async {
-                                    if (!isButtonDisabled) {
-                                      setState(() {
-                                        showSpinner = true;
-                                      });
-                                      var token =
-                                          await storage.getItem('auth_token');
-                                      var email =
-                                          await storage.getItem('email');
-                                      Map<String, String> headers = {
-                                        "Content-type": "application/json",
-                                        "Authorization": "Bearer $token"
-                                      };
-                                      var movieIds = [];
-                                      for (var k in mp.keys) {
-                                        var obj = {"id": k, "rating": 4};
-                                        movieIds.add(obj);
-                                      }
-                                      var json = {
-                                        "email": email,
-                                        "movieIds": movieIds
-                                      };
-                                      http.Response response = await http.post(
-                                          Uri.parse(
-                                              'https://movie-buddy-server.herokuapp.com/usermovie'),
-                                          headers: headers,
-                                          body: jsonEncode(json));
-                                      if (response.statusCode == 200) {
-                                        var userId =
-                                            await storage.getItem('userId');
-                                        var ratings = [];
-                                        for (var k in mp.keys) {
-                                          var arr = [];
-                                          arr.add(userId);
-                                          arr.add(k);
-                                          arr.add(4);
-                                          ratings.add(arr);
-                                        }
-                                        print(ratings);
-                                        var json2 = {
-                                          "userId": userId,
-                                          "ratings": ratings
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                print(value);
+                                setState(() {
+                                  _dropDownValue = value;
+                                  movieTiles.clear();
+                                  if (value == "Action") {
+                                    for (int i = 0; i < action!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[action![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(MovieTile(
+                                        movieId: action![i].movieId,
+                                        title: action![i].title,
+                                        posterUrl: action![i].posterUrl,
+                                        genres: action![i].genres,
+                                        isSelected: isSelected,
+                                      ));
+                                    }
+                                  }
+                                  if (value == "Adventure") {
+                                    for (int i = 0;
+                                        i < adventure!.length;
+                                        i++) {
+                                      bool isSelected = false;
+                                      if (mp[adventure![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: adventure![i].movieId,
+                                          title: adventure![i].title,
+                                          posterUrl: adventure![i].posterUrl,
+                                          genres: adventure![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Animation") {
+                                    for (int i = 0;
+                                        i < animation!.length;
+                                        i++) {
+                                      bool isSelected = false;
+                                      if (mp[animation![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: animation![i].movieId,
+                                          title: animation![i].title,
+                                          posterUrl: animation![i].posterUrl,
+                                          genres: animation![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Children") {
+                                    for (int i = 0; i < children!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[children![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: children![i].movieId,
+                                          title: children![i].title,
+                                          posterUrl: children![i].posterUrl,
+                                          genres: children![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Comedy") {
+                                    for (int i = 0; i < comedy!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[comedy![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: comedy![i].movieId,
+                                          title: comedy![i].title,
+                                          posterUrl: comedy![i].posterUrl,
+                                          genres: comedy![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Crime") {
+                                    for (int i = 0; i < crime!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[crime![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: crime![i].movieId,
+                                          title: crime![i].title,
+                                          posterUrl: crime![i].posterUrl,
+                                          genres: crime![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Documentary") {
+                                    for (int i = 0;
+                                        i < documentary!.length;
+                                        i++) {
+                                      bool isSelected = false;
+                                      if (mp[documentary![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: documentary![i].movieId,
+                                          title: documentary![i].title,
+                                          posterUrl: documentary![i].posterUrl,
+                                          genres: documentary![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Drama") {
+                                    for (int i = 0; i < drama!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[drama![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: drama![i].movieId,
+                                          title: drama![i].title,
+                                          posterUrl: drama![i].posterUrl,
+                                          genres: drama![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Fantasy") {
+                                    for (int i = 0; i < fantasy!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[fantasy![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: fantasy![i].movieId,
+                                          title: fantasy![i].title,
+                                          posterUrl: fantasy![i].posterUrl,
+                                          genres: fantasy![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Horror") {
+                                    for (int i = 0; i < horror!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[horror![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: horror![i].movieId,
+                                          title: horror![i].title,
+                                          posterUrl: horror![i].posterUrl,
+                                          genres: horror![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Musical") {
+                                    for (int i = 0; i < musical!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[musical![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: musical![i].movieId,
+                                          title: musical![i].title,
+                                          posterUrl: musical![i].posterUrl,
+                                          genres: musical![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Mystery") {
+                                    for (int i = 0; i < mystery!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[mystery![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: mystery![i].movieId,
+                                          title: mystery![i].title,
+                                          posterUrl: mystery![i].posterUrl,
+                                          genres: mystery![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Romance") {
+                                    for (int i = 0; i < romance!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[romance![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: romance![i].movieId,
+                                          title: romance![i].title,
+                                          posterUrl: romance![i].posterUrl,
+                                          genres: romance![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Sci-Fi") {
+                                    for (int i = 0; i < scifi!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[scifi![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: scifi![i].movieId,
+                                          title: scifi![i].title,
+                                          posterUrl: scifi![i].posterUrl,
+                                          genres: scifi![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "Thriller") {
+                                    for (int i = 0; i < thriller!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[thriller![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: thriller![i].movieId,
+                                          title: thriller![i].title,
+                                          posterUrl: thriller![i].posterUrl,
+                                          genres: thriller![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  if (value == "War") {
+                                    for (int i = 0; i < war!.length; i++) {
+                                      bool isSelected = false;
+                                      if (mp[war![i].movieId] != null)
+                                        isSelected = true;
+                                      movieTiles.add(
+                                        MovieTile(
+                                          movieId: war![i].movieId,
+                                          title: war![i].title,
+                                          posterUrl: war![i].posterUrl,
+                                          genres: war![i].genres,
+                                          isSelected: isSelected,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                  print(movieTiles.length);
+                                  print(movieTiles[0]);
+                                  flag2 = true;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          flag2
+                              ? SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.7,
+                                  child: ListView.builder(
+                                      itemCount: movieTiles.length,
+                                      key: ObjectKey(movieTiles[0]),
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return movieTiles[index];
+                                      }),
+                                )
+                              : SizedBox(),
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Center(
+                              child: Container(
+                                //color: Colors.blueAccent,
+                                width: double.infinity,
+                                child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding:
+                                          EdgeInsets.only(bottom: 20, top: 5),
+                                    ),
+                                    onPressed: () async {
+                                      if (!isButtonDisabled) {
+                                        setState(() {
+                                          showSpinner = true;
+                                        });
+                                        var token =
+                                            await storage.getItem('auth_token');
+                                        var email =
+                                            await storage.getItem('email');
+                                        Map<String, String> headers = {
+                                          "Content-type": "application/json",
+                                          "Authorization": "Bearer $token"
                                         };
-                                        http.Response response2 = await http.post(
+                                        var movieIds = [];
+                                        for (var k in mp.keys) {
+                                          var obj = {"id": k, "rating": mp[k]};
+                                          movieIds.add(obj);
+                                        }
+                                        var json = {
+                                          "email": email,
+                                          "movieIds": movieIds
+                                        };
+                                        http.Response response = await http.post(
                                             Uri.parse(
-                                                'https://movie-buddy-server.herokuapp.com/recommend'),
+                                                'https://movie-buddy-server.herokuapp.com/usermovie'),
                                             headers: headers,
-                                            body: jsonEncode(json2));
-                                        if (response2.statusCode == 200) {
-                                          Navigator.of(context2)
-                                              .pushNamedAndRemoveUntil(
-                                                  HomeScreen.routeName,
-                                                  (Route<dynamic> route) =>
-                                                      false);
+                                            body: jsonEncode(json));
+                                        if (response.statusCode == 200) {
+                                          var userId =
+                                              await storage.getItem('userId');
+                                          var ratings = [];
+                                          for (var k in mp.keys) {
+                                            var arr = [];
+                                            arr.add(userId);
+                                            arr.add(k);
+                                            arr.add(mp[k]);
+                                            ratings.add(arr);
+                                          }
+                                          print(ratings);
+                                          var json2 = {
+                                            "userId": userId,
+                                            "ratings": ratings
+                                          };
+                                          http.Response response2 = await http.post(
+                                              Uri.parse(
+                                                  'https://movie-buddy-server.herokuapp.com/recommend'),
+                                              headers: headers,
+                                              body: jsonEncode(json2));
+                                          if (response2.statusCode == 200) {
+                                            Navigator.of(context2)
+                                                .pushNamedAndRemoveUntil(
+                                                    HomeScreen.routeName,
+                                                    (Route<dynamic> route) =>
+                                                        false);
+                                          } else {
+                                            setState(() {
+                                              showSpinner = false;
+                                            });
+                                            Fluttertoast.showToast(
+                                                msg: "Please try again later",
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                gravity: ToastGravity.BOTTOM,
+                                                timeInSecForIosWeb: 1);
+                                          }
                                         } else {
                                           setState(() {
                                             showSpinner = false;
                                           });
+                                          print(response.body);
                                           Fluttertoast.showToast(
                                               msg: "Please try again later",
                                               toastLength: Toast.LENGTH_SHORT,
                                               gravity: ToastGravity.BOTTOM,
                                               timeInSecForIosWeb: 1);
+                                          print(response.reasonPhrase);
                                         }
                                       } else {
-                                        setState(() {
-                                          showSpinner = false;
-                                        });
-                                        print(response.body);
                                         Fluttertoast.showToast(
-                                            msg: "Please try again later",
+                                            msg: "Minimum of 5 movies needed",
                                             toastLength: Toast.LENGTH_SHORT,
                                             gravity: ToastGravity.BOTTOM,
                                             timeInSecForIosWeb: 1);
-                                        print(response.reasonPhrase);
                                       }
-                                    } else {
-                                      Fluttertoast.showToast(
-                                          msg: "Minimum of 5 movies needed",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          timeInSecForIosWeb: 1);
-                                    }
-                                  },
-                                  child: Text(
-                                    "Continue",
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                    ),
-                                  )),
+                                    },
+                                    child: Text(
+                                      "Continue",
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                      ),
+                                    )),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                print(snapshot.error);
+                return Padding(
+                  padding: EdgeInsets.only(top: 0, left: 10, right: 10),
+                  child: Container(
+                    padding: EdgeInsets.only(left: 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Center(
+                          child: Image.asset('Assets/offline.jpg'),
+                        ),
+                        Center(
+                          child: Text(
+                            "You are offline",
+                            style: TextStyle(
+                              fontSize: 20.0,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              );
-            } else if (snapshot.hasError) {
-              print(snapshot.error);
-              return Padding(
-                padding: EdgeInsets.only(top: 0, left: 10, right: 10),
-                child: Container(
-                  padding: EdgeInsets.only(left: 0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Image.asset('Assets/offline.jpg'),
+                );
+              }
+              return Center(
+                  child: CircularProgressIndicator(
+                valueColor: new AlwaysStoppedAnimation<Color>(Colors.black),
+              ));
+            }),
+      ),
+      appBar: AppBar(
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 20),
+            child: IconButton(
+              onPressed: () {
+                setState(() {
+                  if (this.actionIcon.icon == Icons.search) {
+                    this.actionIcon = new Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    );
+                    this.appBarTitle = new TextField(
+                      controller: _searchQuery,
+                      style: new TextStyle(
+                        color: Colors.black,
                       ),
-                      Center(
-                        child: Text(
-                          "You are offline",
-                          style: TextStyle(
-                            fontSize: 20.0,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return Center(
-                child: CircularProgressIndicator(
-              valueColor: new AlwaysStoppedAnimation<Color>(Colors.black),
-            ));
-          }),
+                      decoration: new InputDecoration(
+                          prefixIcon:
+                              new Icon(Icons.search, color: Colors.black),
+                          hintText: "Search a movie",
+                          hintStyle: new TextStyle(color: Colors.black)),
+                    );
+                    print(_searchQuery.text);
+                    _handleSearchStart();
+                  } else {
+                    _handleSearchEnd();
+                  }
+                });
+              },
+              icon: actionIcon,
+            ),
+          ),
+        ],
+        title: appBarTitle,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(50),
+              bottomRight: Radius.circular(50)),
+        ),
+        centerTitle: true,
+        backgroundColor: Color(0xFFF9EFE3),
+      ),
     );
   }
 }
@@ -805,13 +932,66 @@ class _MovieTileState extends State<MovieTile> {
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.all(0),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (!widget.isSelected) {
-                          mp[widget.movieId] = 1;
-                          setState(() {
-                            widget.isSelected = true;
-                          });
-                          if (mp.length > 4) isButtonDisabled = false;
+                          bool result = await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text('Rate'),
+                                  content: RatingBar.builder(
+                                    minRating: 1,
+                                    direction: Axis.horizontal,
+                                    itemCount: 5,
+                                    itemPadding:
+                                        EdgeInsets.symmetric(horizontal: 4.0),
+                                    itemBuilder: (context, _) => Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    onRatingUpdate: (rating) {
+                                      rtng = rating.toInt();
+                                    },
+                                  ),
+                                  actions: <Widget>[
+                                    new TextButton(
+                                      onPressed: () {
+                                        rtng = 0;
+                                        Navigator.of(context,
+                                                rootNavigator: true)
+                                            .pop(
+                                                false); // dismisses only the dialog and returns false
+                                      },
+                                      child: Text('Back'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        if (rtng == 0) {
+                                          Fluttertoast.showToast(
+                                              msg: "Rating can't be 0",
+                                              toastLength: Toast.LENGTH_LONG,
+                                              gravity: ToastGravity.BOTTOM,
+                                              timeInSecForIosWeb: 1);
+                                        } else {
+                                          mp[widget.movieId] = rtng;
+                                          rtng = 0;
+                                          if (mounted) {
+                                            setState(() {
+                                              widget.isSelected = true;
+                                            });
+                                          }
+                                          if (mp.length > 4)
+                                            isButtonDisabled = false;
+                                          Navigator.of(context,
+                                                  rootNavigator: true)
+                                              .pop(true);
+                                        }
+                                      },
+                                      child: Text('Confirm'),
+                                    ),
+                                  ],
+                                );
+                              });
                         } else {
                           mp.remove(widget.movieId);
                           setState(() {
