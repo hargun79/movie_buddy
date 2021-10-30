@@ -3,11 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import 'widgets/meta_data_section.dart';
-import 'widgets/play_pause_button_bar.dart';
-import 'widgets/player_state_section.dart';
-import 'widgets/source_input_section.dart';
-import 'widgets/volume_slider.dart';
 
 class YoutubeAppDemo extends StatefulWidget {
   dynamic title;
@@ -63,9 +58,7 @@ class _YoutubeAppDemoState extends State<YoutubeAppDemo> {
                   const Expanded(child: player),
                   const SizedBox(
                     width: 500,
-                    child: SingleChildScrollView(
-                      child: Controls(),
-                    ),
+                    child: SingleChildScrollView(),
                   ),
                 ],
               );
@@ -141,7 +134,7 @@ class _YoutubeAppDemoState extends State<YoutubeAppDemo> {
                   padding: EdgeInsets.only(left: 20, right: 20, top: 20),
                   child: Row(
                     children: [
-                      for (int i = 3; i < widget.genres!.length; i++)
+                      for (int i = 3; i < widget.genres!.length && i < 6; i++)
                         Padding(
                           padding: EdgeInsets.only(left: 7, top: 5),
                           child: Container(
@@ -177,32 +170,4 @@ class _YoutubeAppDemoState extends State<YoutubeAppDemo> {
     _controller.close();
     super.dispose();
   }
-}
-
-class Controls extends StatelessWidget {
-  const Controls();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _space,
-          MetaDataSection(),
-          _space,
-          SourceInputSection(),
-          _space,
-          PlayPauseButtonBar(),
-          _space,
-          VolumeSlider(),
-          _space,
-          PlayerStateSection(),
-        ],
-      ),
-    );
-  }
-
-  Widget get _space => const SizedBox(height: 10);
 }

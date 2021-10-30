@@ -15,7 +15,6 @@ Future<dynamic> fetchMovies() async {
   Map<String, String> headers = {
     "Content-type": "application/json",
     "Accept": "application/json",
-    'Charset': 'utf-8',
     "Authorization": "Bearer $token",
   };
 
