@@ -189,7 +189,7 @@ class _MyAddMoviesScreenBodyState extends State<MyAddMoviesScreenBody> {
     };
     final response2 = await http.get(
         Uri.parse(
-            'https://movie-buddy-server.herokuapp.com/getusermovies?email=$email'),
+            'https://movie-buddy-server.herokuapp.com/usermovie?email=$email'),
         headers: headers);
     if (response2.statusCode == 200) {
       dynamic json2 = jsonDecode(response2.body);
@@ -704,7 +704,7 @@ class _MyAddMoviesScreenBodyState extends State<MyAddMoviesScreenBody> {
                                             };
                                             final response3 = await http.get(
                                                 Uri.parse(
-                                                    'https://movie-buddy-server.herokuapp.com/getusermovies?email=$email2'),
+                                                    'https://movie-buddy-server.herokuapp.com/usermovie?email=$email2'),
                                                 headers: headers);
                                             if (response3.statusCode == 200) {
                                               dynamic json2 =

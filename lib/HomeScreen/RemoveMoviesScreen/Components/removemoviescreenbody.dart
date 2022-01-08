@@ -25,7 +25,7 @@ Future<dynamic> fetchMovies() async {
 
   final response = await http.get(
       Uri.parse(
-          'https://movie-buddy-server.herokuapp.com/getusermovies?email=$email'),
+          'https://movie-buddy-server.herokuapp.com/usermovie?email=$email'),
       headers: headers);
 
   if (response.statusCode == 200) {
